@@ -10,6 +10,7 @@ const cors = require('cors');
 // const authRouter = require('./routers/auth');
 // const userRouter = require('./routers/user');
 
+
 app.use(bodyParser.json());
 app.use(morgan('dev'));
 app.use(cors());
@@ -24,7 +25,8 @@ app.get('/', (req, res) => {
 
 // app.use('/api', authRouter);
 // app.use('/api', userRouter);
+const PORT = process.env.PORT || 5000;
 
-app.listen(5000, () =>
-    console.log('Server is running on port 5000')
+app.listen(PORT, () =>
+    console.log(`Server is running on port ${PORT}`)
 );
