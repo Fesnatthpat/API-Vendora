@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+
+  products  Product[]
+}
+
+model Customer {
+  id             Int        @id @default(autoincrement())
+  name           String
+  phone          String
+  points         Int        @default(0)
+  level          String     @default("Silver")
+  joinDate       DateTime   @default(now())
+  rewardsEarned  Int        @default(0)
+
+  orders         Order[]
+  pointLogs      PointLog[]
+}
+
+model Order {
+  id             String     @id
+  items          Json
+  subtotal       Float
+  discount       Float
+  total          Float
+  totalCost      Float
+  profit         Float
+  paymentMethod  String
+  paymentSlip    String?
+  receivedAmount Float?
+  changeDue      Float?
+  notes          String?
+  status         String     @default("completed")
+  voidedAt       DateTime?
+  timestamp      DateTime   @default(now())
+
+  customerId     Int?
+  customer       Customer?  @relation(fields: [customerId], references: [id])
+}
+
+model PointLog {
+  id         Int       @id @default(autoincrement())
+  amount     Int
+  after      Int
+  note       String
+  timestamp  DateTime  @default(now())
+
+  customerId Int
+  customer   Customer  @relation(fields: [customerId], references: [id])
+}
+
+model Product {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  category           String
+  price              Float
+  cost               Float
+  stock              Int       @default(0)
+  minStockThreshold  Int       @default(5)
+  barcode            String?
+  sku                String?
+  image              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  categoryId         Int?
+  categoryRelation   Category? @relation(fields: [categoryId], references: [id])
+
+  stockMovements     StockMovement[]
+}
+
+model Staff {
+  id        Int       @id @default(autoincrement())
+  name      String
+  username  String    @unique
+  password  String
+  role      String    @default("Cashier")
+  status    String    @default("Active")
+  joinDate  DateTime  @default(now())
+}
+
+model StockMovement {
+  id            Int       @id @default(autoincrement())
+  productName   String
+  type          String
+  quantity      Int
+  previousStock Int
+  newStock      Int
+  costAtTime    Float
+  supplier      String?
+  note          String?
+  timestamp     DateTime  @default(now())
+
+  productId     Int
+  product       Product   @relation(fields: [productId], references: [id])
+}
+
+model StoreSettings {
+  id                      Int      @id @default(1)
+  name                    String   @default("Vendora POS")
+  address                 String?
+  phone                   String?
+  currency                String   @default("THB")
+  taxRate                 Float    @default(7)
+  includeTax              Boolean  @default(true)
+  receiptNote             String?
+  loyaltyPointType        String   @default("amount")
+  loyaltyPointRate        Float    @default(20)
+  loyaltyPointThreshold   Int      @default(100)
+}
