@@ -18,6 +18,10 @@ app.use('/uploads', express.static('uploads'));
 readdirSync('./routers')
 .map((c) => app.use('/api', require('./routers/' + c)));
 
+app.get('/', (req, res) => {
+    res.send('API Online');
+});
+
 // app.use('/api', authRouter);
 // app.use('/api', userRouter);
 
