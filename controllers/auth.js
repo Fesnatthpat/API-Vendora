@@ -1,5 +1,6 @@
 const prisma = require('../prisma/prisma');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 exports.register = async(req, res) => {
     try {
@@ -47,10 +48,6 @@ exports.login = async(req, res) => {
 
         const { username, password } = req.body;
 
-        console.log('Logging in staff:', {
-            username
-        });
-
         const staff = await prisma.staff.findUnique({
             where: {
                 username
@@ -73,11 +70,25 @@ exports.login = async(req, res) => {
                 message: 'Invalid password'
             });
         }
+         // เช็ค JWT_SECRET
+        console.log(process.env.JWT_SECRET);
 
-        console.log('Staff logged in:', staff);
+        // สร้าง JWT Token
+        const token = jwt.sign(
+            {
+                id: staff.id,
+                username: staff.username,
+                role: staff.role
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: '1d'
+            }
+        );
 
         res.json({
             message: 'Login success',
+            token,
             user: {
                 id: staff.id,
                 name: staff.name,
