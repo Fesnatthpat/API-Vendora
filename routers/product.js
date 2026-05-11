@@ -13,7 +13,8 @@ const {
     listProducts,
     readProduct,
     updateProduct,
-    removeProduct
+    removeProduct,
+    getLowStockProducts
 } = require('../controllers/product');
 
 // Multer setup for memory storage (for Supabase upload)
@@ -23,6 +24,7 @@ const upload = multer({ storage: storage });
 // Routes
 router.post('/product', auth, admin, upload.single('image'), createProduct);
 router.get('/products', listProducts);
+router.get('/products/low-stock', auth, getLowStockProducts);
 router.get('/product/:id', readProduct);
 router.put('/product/:id', auth, admin, upload.single('image'), updateProduct);
 router.delete('/product/:id', auth, admin, removeProduct);

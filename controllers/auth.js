@@ -107,3 +107,28 @@ exports.login = async(req, res) => {
 
     }
 }
+
+exports.getMe = async (req, res) => {
+    try {
+        const staff = await prisma.staff.findUnique({
+            where: { id: req.user.id },
+            select: {
+                id: true,
+                name: true,
+                username: true,
+                role: true,
+                status: true,
+                joinDate: true
+            }
+        });
+
+        if (!staff) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json(staff);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};

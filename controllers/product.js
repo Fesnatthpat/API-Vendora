@@ -189,3 +189,17 @@ exports.removeProduct = async (req, res) => {
     }
 };
 
+exports.getLowStockProducts = async (req, res) => {
+    try {
+        const lowStockProducts = await prisma.$queryRaw`
+            SELECT * FROM "Product" 
+            WHERE "stock" <= "minStockThreshold"
+        `;
+
+        res.json(lowStockProducts);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+

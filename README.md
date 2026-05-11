@@ -16,8 +16,16 @@ Backend API สำหรับระบบจัดการการขาย (
 | :--- | :--- | :--- | :--- |
 | POST | `/register` | สมัครสมาชิกพนักงานใหม่ | No |
 | POST | `/login` | เข้าสู่ระบบและรับ Token | No |
+| GET | `/me` | ดูข้อมูลพนักงานที่กำลังล็อกอินอยู่ | Yes |
 
-### 2. ระบบจัดการพนักงาน (User Management)
+### 2. ระบบแดชบอร์ดและรายงาน (Dashboard & Analytics)
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| GET | `/dashboard/summary` | สรุปยอดขาย กำไร และจำนวนสินค้าสต็อกต่ำ | Yes (Admin) |
+| GET | `/dashboard/top-products` | รายชื่อ 5 อันดับสินค้าขายดีที่สุด | Yes (Admin) |
+| GET | `/dashboard/sales-chart` | ข้อมูลกราฟยอดขายย้อนหลัง 7 วัน | Yes (Admin) |
+
+### 3. ระบบจัดการพนักงาน (User Management)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | GET | `/users` | รายชื่อพนักงานทั้งหมด | Yes |
@@ -25,7 +33,7 @@ Backend API สำหรับระบบจัดการการขาย (
 | PUT | `/user/:id` | แก้ไขข้อมูลพนักงาน | Yes |
 | DELETE | `/user/:id` | ลบพนักงาน | Yes (Admin) |
 
-### 3. ระบบจัดการหมวดหมู่ (Category)
+### 4. ระบบจัดการหมวดหมู่ (Category)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | POST | `/category` | สร้างหมวดหมู่ใหม่ | Yes (Admin) |
@@ -33,16 +41,17 @@ Backend API สำหรับระบบจัดการการขาย (
 | PUT | `/category/:id` | แก้ไขหมวดหมู่ | Yes (Admin) |
 | DELETE | `/category/:id` | ลบหมวดหมู่ | Yes (Admin) |
 
-### 4. ระบบจัดการสินค้า (Product)
+### 5. ระบบจัดการสินค้า (Product)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | POST | `/product` | เพิ่มสินค้าใหม่ (รองรับการอัปโหลดรูปไป Supabase) | Yes (Admin) |
 | GET | `/products` | รายชื่อสินค้าทั้งหมด | No |
+| GET | `/products/low-stock` | รายชื่อสินค้าที่สต็อกใกล้หมด (ต่ำกว่าเกณฑ์) | Yes |
 | GET | `/product/:id` | รายละเอียดสินค้ารายชิ้น | No |
 | PUT | `/product/:id` | แก้ไขข้อมูลสินค้า | Yes (Admin) |
 | DELETE | `/product/:id` | ลบสินค้า | Yes (Admin) |
 
-### 5. ระบบจัดการลูกค้า (Customer)
+### 6. ระบบจัดการลูกค้า (Customer)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | POST | `/customer` | เพิ่มข้อมูลลูกค้าใหม่ | Yes |
@@ -52,7 +61,7 @@ Backend API สำหรับระบบจัดการการขาย (
 | PUT | `/customer/:id` | แก้ไขข้อมูลลูกค้า | Yes |
 | DELETE | `/customer/:id` | ลบข้อมูลลูกค้า | Yes |
 
-### 6. ระบบขายสินค้า (Order / Checkout)
+### 7. ระบบขายสินค้า (Order / Checkout)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | POST | `/order` | ทำการขาย (ตัดสต็อก, บันทึกการเคลื่อนไหว, เพิ่มแต้มลูกค้า) | Yes |
@@ -60,13 +69,13 @@ Backend API สำหรับระบบจัดการการขาย (
 | GET | `/order/:id` | ดูรายละเอียดใบเสร็จ/คำสั่งซื้อ | Yes |
 | PUT | `/order/void/:id` | ยกเลิกรายการขาย (คืนสต็อก, หักแต้มลูกค้าคืน) | Yes (Admin) |
 
-### 7. ระบบสต็อกสินค้า (Stock Movement)
+### 8. ระบบสต็อกสินค้า (Stock Movement)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | GET | `/stock/movements` | ดูประวัติการเคลื่อนไหวสต็อกทั้งหมด | Yes |
 | POST | `/stock/adjust` | ปรับปรุงสต็อกด้วยตนเอง (In/Out/Set) | Yes (Admin) |
 
-### 8. ตั้งค่าร้านค้า (Store Settings)
+### 9. ตั้งค่าร้านค้า (Store Settings)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | GET | `/settings` | ดูข้อมูลร้านค้าและเงื่อนไขการให้แต้ม | Yes |
