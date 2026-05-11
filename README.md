@@ -17,6 +17,7 @@ Backend API สำหรับระบบจัดการการขาย (
 | POST | `/register` | สมัครสมาชิกพนักงานใหม่ | No |
 | POST | `/login` | เข้าสู่ระบบและรับ Token | No |
 | GET | `/me` | ดูข้อมูลพนักงานที่กำลังล็อกอินอยู่ | Yes |
+| PUT | `/change-password` | เปลี่ยนรหัสผ่านพนักงาน | Yes |
 
 ### 2. ระบบแดชบอร์ดและรายงาน (Dashboard & Analytics)
 | Method | Endpoint | Description | Auth |
