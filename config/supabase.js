@@ -1,0 +1,20 @@
+const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+        persistSession: false
+    },
+    realtime: {
+        transport: WebSocket
+    }
+});
+
+module.exports = supabase;

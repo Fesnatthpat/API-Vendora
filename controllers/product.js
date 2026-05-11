@@ -1,6 +1,49 @@
 const prisma = require('../prisma/prisma');
-const fs = require('fs');
+const supabase = require('../config/supabase');
 const path = require('path');
+
+const BUCKET_NAME = 'vendora';
+
+const uploadToSupabase = async (file) => {
+    const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+            cacheControl: '3600',
+            upsert: false
+        });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName);
+
+    return publicUrl;
+};
+
+const deleteFromSupabase = async (imageUrl) => {
+    try {
+        if (!imageUrl || !imageUrl.includes('supabase.co')) return;
+        
+        // Extract filename from URL
+        const parts = imageUrl.split('/');
+        const fileName = parts[parts.length - 1];
+
+        if (fileName) {
+            const { error } = await supabase.storage
+                .from(BUCKET_NAME)
+                .remove([fileName]);
+            
+            if (error) {
+                console.error('Error deleting from Supabase:', error);
+            }
+        }
+    } catch (err) {
+        console.error('Failed to delete image from Supabase:', err);
+    }
+};
 
 exports.createProduct = async (req, res) => {
     try {
@@ -8,8 +51,7 @@ exports.createProduct = async (req, res) => {
         let imageUrl = null;
 
         if (req.file) {
-            // Store relative path for database
-            imageUrl = req.file.path.replace(/\\/g, '/');
+            imageUrl = await uploadToSupabase(req.file);
         }
 
         const product = await prisma.product.create({
@@ -30,10 +72,6 @@ exports.createProduct = async (req, res) => {
         res.status(201).json(product);
     } catch (err) {
         console.error(err);
-        // Delete uploaded file if database operation fails
-        if (req.file) {
-            fs.unlinkSync(req.file.path);
-        }
         res.status(500).json({ message: 'Server Error', error: err.message });
     }
 };
@@ -86,19 +124,18 @@ exports.updateProduct = async (req, res) => {
         });
 
         if (!existingProduct) {
-            // Delete newly uploaded file if product not found
-            if (req.file) fs.unlinkSync(req.file.path);
             return res.status(404).json({ message: 'Product not found' });
         }
 
         let imageUrl = existingProduct.image;
 
         if (req.file) {
-            // Delete old image file if it exists
-            if (existingProduct.image && fs.existsSync(existingProduct.image)) {
-                fs.unlinkSync(existingProduct.image);
+            // Delete old image from Supabase
+            if (existingProduct.image) {
+                await deleteFromSupabase(existingProduct.image);
             }
-            imageUrl = req.file.path.replace(/\\/g, '/');
+            // Upload new image
+            imageUrl = await uploadToSupabase(req.file);
         }
 
         const product = await prisma.product.update({
@@ -120,7 +157,6 @@ exports.updateProduct = async (req, res) => {
         res.json(product);
     } catch (err) {
         console.error(err);
-        if (req.file) fs.unlinkSync(req.file.path);
         res.status(500).json({ message: 'Server Error', error: err.message });
     }
 };
@@ -137,9 +173,9 @@ exports.removeProduct = async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Delete local image file
-        if (product.image && fs.existsSync(product.image)) {
-            fs.unlinkSync(product.image);
+        // Delete image from Supabase
+        if (product.image) {
+            await deleteFromSupabase(product.image);
         }
 
         await prisma.product.delete({
@@ -152,3 +188,4 @@ exports.removeProduct = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+

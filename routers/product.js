@@ -16,17 +16,8 @@ const {
     removeProduct
 } = require('../controllers/product');
 
-// Multer setup for local storage
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/products')
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, uniqueSuffix + path.extname(file.originalname))
-    }
-});
-
+// Multer setup for memory storage (for Supabase upload)
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Routes
