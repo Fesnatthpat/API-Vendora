@@ -85,9 +85,15 @@ model Staff {
   name      String
   username  String    @unique
   password  String
-  role      String    @default("Cashier")
+  role      Role      @default(Cashier)
   status    String    @default("Active")
   joinDate  DateTime  @default(now())
+}
+
+enum Role {
+  Cashier
+  Manager
+  Admin
 }
 
 model StockMovement {
