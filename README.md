@@ -5,7 +5,9 @@ Backend API สำหรับระบบจัดการการขาย (
 ## 🚀 ข้อมูลพื้นฐาน
 - **Base URL:** `http://localhost:5000/api`
 - **Authentication:** ใช้ Bearer Token (JWT) ใน Header สำหรับเส้นที่ต้องใช้สิทธิ์เข้าถึง
-- **Supabase Storage:** รูปภาพสินค้าเก็บที่ Bucket: `vendora`
+- **Supabase Storage:** 
+    - รูปภาพสินค้าเก็บที่ Bucket: `vendora`
+    - รูปภาพสลิปการชำระเงินเก็บที่ Bucket: `paymentSlip`
 
 ---
 
@@ -65,7 +67,7 @@ Backend API สำหรับระบบจัดการการขาย (
 ### 7. ระบบขายสินค้า (Order / Checkout)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| POST | `/order` | ทำการขาย (ตัดสต็อก, บันทึกการเคลื่อนไหว, เพิ่มแต้มลูกค้า) | Yes |
+| POST | `/order` | ทำการขาย (รองรับการอัปโหลด `paymentSlip` ไป Supabase) | Yes |
 | GET | `/orders` | ประวัติการขายทั้งหมด (กรองตามวันที่ได้) | Yes |
 | GET | `/order/:id` | ดูรายละเอียดใบเสร็จ/คำสั่งซื้อ | Yes |
 | PUT | `/order/void/:id` | ยกเลิกรายการขาย (คืนสต็อก, หักแต้มลูกค้าคืน) | Yes (Admin) |
