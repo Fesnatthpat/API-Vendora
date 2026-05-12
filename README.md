@@ -63,6 +63,8 @@ Backend API สำหรับระบบจัดการการขาย (
 | GET | `/customer/phone/:phone` | ค้นหาลูกค้าด้วยเบอร์โทรศัพท์ | Yes |
 | PUT | `/customer/:id` | แก้ไขข้อมูลลูกค้า | Yes |
 | DELETE | `/customer/:id` | ลบข้อมูลลูกค้า | Yes |
+| POST | `/customer/:id/redeem` | แลกแต้มรางวัล (หักแต้มและบันทึกประวัติ) | Yes |
+| POST | `/customer/:id/adjust-points` | ปรับปรุงแต้มด้วยตนเอง (รองรับค่าบวกและลบ) | Yes |
 
 ### 7. ระบบขายสินค้า (Order / Checkout)
 | Method | Endpoint | Description | Auth |
