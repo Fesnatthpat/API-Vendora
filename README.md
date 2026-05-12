@@ -84,6 +84,7 @@ Backend API สำหรับระบบจัดการการขาย (
 | GET | `/settings` | ดูข้อมูลร้านค้าและเงื่อนไขการให้แต้ม | Yes |
 | PUT | `/settings` | แก้ไขข้อมูลร้านค้า/ภาษี/แต้มสะสม | Yes (Admin) |
 | POST | `/settings` | บันทึกข้อมูลร้านค้า (รองรับ `loyaltyPointType`, `loyaltyPointRate`, `loyaltyPointThreshold`) | Yes (Admin) |
+| PATCH | `/settings` | อัปเดตข้อมูลบางส่วนของร้านค้า | Yes (Admin) |
 
 ---
 

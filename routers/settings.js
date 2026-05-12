@@ -11,5 +11,6 @@ const {
 router.get('/settings', auth, getSettings);
 router.put('/settings', auth, admin, updateSettings);
 router.post('/settings', auth, admin, updateSettings);
+router.patch('/settings', auth, admin, updateSettings);
 
 module.exports = router;

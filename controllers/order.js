@@ -112,8 +112,20 @@ exports.createOrder = async (req, res) => {
 
             // Update Customer Points if applicable
             if (customerId) {
-                const settings = await tx.storeSettings.findFirst() || { loyaltyPointRate: 20 };
-                const pointsEarned = Math.floor(parseFloat(total) / settings.loyaltyPointRate);
+                const settings = await tx.storeSettings.findFirst() || { 
+                    loyaltyPointType: 'amount', 
+                    loyaltyPointRate: 20 
+                };
+                
+                let pointsEarned = 0;
+                if (settings.loyaltyPointType === 'item') {
+                    // Logic: 1 Item = X Points (Sum of quantities * rate)
+                    const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
+                    pointsEarned = Math.floor(totalQuantity * settings.loyaltyPointRate);
+                } else {
+                    // Logic: X Amount = 1 Point (Total / rate)
+                    pointsEarned = Math.floor(parseFloat(total) / settings.loyaltyPointRate);
+                }
 
                 if (pointsEarned > 0) {
                     const customer = await tx.customer.update({
@@ -128,7 +140,7 @@ exports.createOrder = async (req, res) => {
                             customerId: parseInt(customerId),
                             amount: pointsEarned,
                             after: customer.points,
-                            note: `Earned from Order: ${id}`
+                            note: `Earned from Order: ${id} (${settings.loyaltyPointType === 'item' ? 'Item based' : 'Amount based'})`
                         }
                     });
                 }
