@@ -2,6 +2,48 @@ const prisma = require('../prisma/prisma');
 const bcrypt = require('bcryptjs');
 
 
+// CREATE USER (ADMIN ONLY)
+exports.createUser = async(req, res) => {
+    try {
+        const { name, username, password, role, status } = req.body;
+
+        const existingUser = await prisma.staff.findUnique({
+            where: { username }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = await prisma.staff.create({
+            data: {
+                name,
+                username,
+                password: hashedPassword,
+                role: role || 'Cashier',
+                status: status || 'Active'
+            }
+        });
+
+        res.status(201).json({
+            message: 'User created successfully',
+            user: {
+                id: newUser.id,
+                name: newUser.name,
+                username: newUser.username,
+                role: newUser.role,
+                status: newUser.status
+            }
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 // GET ALL USERS
 exports.listUsers = async(req, res) => {
 

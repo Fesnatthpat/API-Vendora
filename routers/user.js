@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const {
+    createUser,
     listUsers,
     getUser,
     updateUser,
@@ -10,6 +11,15 @@ const {
 
 const authMiddleware = require('../middleware/auth');
 const adminMiddleware = require('../middleware/admin');
+
+
+// ADMIN ONLY
+router.post(
+    '/user',
+    authMiddleware,
+    adminMiddleware,
+    createUser
+);
 
 
 // USER LOGIN REQUIRED

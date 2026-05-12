@@ -31,6 +31,7 @@ Backend API สำหรับระบบจัดการการขาย (
 ### 3. ระบบจัดการพนักงาน (User Management)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
+| POST | `/user` | สร้างพนักงาน/Admin ใหม่ | Yes (Admin) |
 | GET | `/users` | รายชื่อพนักงานทั้งหมด | Yes |
 | GET | `/user/:id` | ดูข้อมูลพนักงานรายบุคคล | Yes |
 | PUT | `/user/:id` | แก้ไขข้อมูลพนักงาน | Yes |
