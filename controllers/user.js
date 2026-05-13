@@ -227,3 +227,50 @@ exports.deleteUser = async(req, res) => {
     }
 
 };
+
+// CHANGE PASSWORD (ADMIN ONLY)
+exports.changePassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+
+        if (!password || password.length < 6) {
+            return res.status(400).json({
+                message: 'Password must be at least 6 characters long'
+            });
+        }
+
+        const existingUser = await prisma.staff.findUnique({
+            where: {
+                id: Number(id)
+            }
+        });
+
+        if (!existingUser) {
+            return res.status(404).json({
+                message: 'User not found'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await prisma.staff.update({
+            where: {
+                id: Number(id)
+            },
+            data: {
+                password: hashedPassword
+            }
+        });
+
+        res.json({
+            message: 'Password updated successfully'
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+            message: 'Server Error'
+        });
+    }
+};

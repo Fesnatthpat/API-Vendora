@@ -6,7 +6,8 @@ const {
     listUsers,
     getUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    changePassword
 } = require('../controllers/user');
 
 const authMiddleware = require('../middleware/auth');
@@ -53,6 +54,14 @@ router.delete(
     authMiddleware,
     adminMiddleware,
     deleteUser
+);
+
+// ADMIN ONLY
+router.patch(
+    '/change-password/:id',
+    authMiddleware,
+    adminMiddleware,
+    changePassword
 );
 
 module.exports = router;
