@@ -2,7 +2,7 @@ module.exports = async(req, res, next) => {
 
     try {
 
-        if (req.user.role !== 'Admin') {
+        if (req.user.role !== 'Admin' && req.user.role !== 'Dev') {
 
             return res.status(403).json({
                 message: 'Access Denied'

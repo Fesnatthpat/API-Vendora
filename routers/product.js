@@ -5,7 +5,7 @@ const path = require('path');
 
 // Middleware
 const auth = require('../middleware/auth');
-const admin = require('../middleware/admin');
+const role = require('../middleware/role');
 
 // Controller functions
 const {
@@ -22,11 +22,11 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Routes
-router.post('/product', auth, admin, upload.single('image'), createProduct);
+router.post('/product', auth, role(['Cashier', 'Manager', 'Admin', 'Dev']), upload.single('image'), createProduct);
 router.get('/products', listProducts);
 router.get('/products/low-stock', auth, getLowStockProducts);
 router.get('/product/:id', readProduct);
-router.put('/product/:id', auth, admin, upload.single('image'), updateProduct);
-router.delete('/product/:id', auth, admin, removeProduct);
+router.put('/product/:id', auth, role(['Cashier', 'Manager', 'Admin', 'Dev']), upload.single('image'), updateProduct);
+router.delete('/product/:id', auth, role(['Cashier', 'Manager', 'Admin', 'Dev']), removeProduct);
 
 module.exports = router;
