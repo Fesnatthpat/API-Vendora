@@ -27,7 +27,7 @@ exports.createUser = async(req, res) => {
                 name,
                 username,
                 password: hashedPassword,
-                role: role || 'Cashier',
+                role: role || 'Admin',
                 status: status || 'Active',
                 storeId: storeId
             }

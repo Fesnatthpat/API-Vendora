@@ -132,7 +132,7 @@ model Staff {
   name      String
   username  String    @unique
   password  String
-  role      Role      @default(Cashier)
+  role      Role      @default(Admin)
   status    String    @default("Active")
   joinDate  DateTime  @default(now())
 

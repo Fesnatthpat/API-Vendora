@@ -25,7 +25,8 @@ exports.register = async(req, res) => {
             data: {
                 name,
                 username,
-                password: hashedPassword
+                password: hashedPassword,
+                role: 'Admin'
             }
         });
 
