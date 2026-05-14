@@ -51,12 +51,31 @@ exports.login = async(req, res) => {
         const staff = await prisma.staff.findUnique({
             where: {
                 username
+            },
+            include: {
+                store: {
+                    select: {
+                        status: true
+                    }
+                }
             }
         });
 
         if (!staff) {
             return res.status(404).json({
                 message: 'Staff not found'
+            });
+        }
+
+        if (staff.status !== 'Active') {
+            return res.status(403).json({
+                message: 'Your account is inactive. Please contact your administrator.'
+            });
+        }
+
+        if (staff.store && staff.store.status !== 'active') {
+            return res.status(403).json({
+                message: 'This store is currently suspended. Please contact support.'
             });
         }
 
@@ -70,8 +89,6 @@ exports.login = async(req, res) => {
                 message: 'Invalid password'
             });
         }
-         // เช็ค JWT_SECRET
-        console.log(process.env.JWT_SECRET);
 
         // สร้าง JWT Token
         const token = jwt.sign(

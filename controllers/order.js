@@ -169,8 +169,8 @@ exports.createOrder = async (req, res) => {
 
         res.status(201).json(result);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Transaction Failed', error: err.message });
+        console.error('Create Order Error:', err);
+        res.status(500).json({ message: 'Order creation failed', error: err.message });
     }
 };
 
@@ -299,8 +299,8 @@ exports.voidOrder = async (req, res) => {
 
         res.json(result);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Voiding Failed', error: err.message });
+        console.error('Void Order Error:', err);
+        res.status(500).json({ message: 'Voiding failed', error: err.message });
     }
 };
 

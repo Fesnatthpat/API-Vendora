@@ -78,8 +78,8 @@ exports.createProduct = async (req, res) => {
 
         res.status(201).json(product);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server Error', error: err.message });
+        console.error('Create Product Error:', err);
+        res.status(500).json({ message: 'Server Error: Unable to create product' });
     }
 };
 
@@ -173,8 +173,8 @@ exports.updateProduct = async (req, res) => {
 
         res.json(product);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server Error', error: err.message });
+        console.error('Update Product Error:', err);
+        res.status(500).json({ message: 'Server Error: Unable to update product' });
     }
 };
 
