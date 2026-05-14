@@ -30,7 +30,7 @@ Backend API สำหรับระบบจัดการการขาย (
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | GET | `/dev/stats` | สรุปข้อมูลภาพรวมทั้งระบบ (รวมทุกร้านค้า) | Dev Only |
-| GET | `/dev/stores` | รายชื่อร้านค้าทั้งหมดพร้อมสถานะและเจ้าของ | Dev Only |
+| GET | `/dev/stores` | รายชื่อร้านค้าทั้งหมดพร้อมสถานะ, ข้อมูลพนักงาน (staff) และสรุปยอดจำนวน (_count) | Dev Only |
 | PUT | `/dev/stores/:storeId/features` | เปิด/ปิด ฟีเจอร์แยกตามร้านค้า (JSON) | Dev Only |
 | PUT | `/dev/stores/:storeId/status` | ระงับการใช้งานหรือเปิดใช้งานร้านค้า | Dev Only |
 | GET | `/dev/stores/:storeId/staff` | ดูรายชื่อพนักงานทั้งหมดของร้านที่ระบุ | Dev Only |

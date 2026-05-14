@@ -26,11 +26,21 @@ exports.listAllStores = async (req, res) => {
         const stores = await prisma.store.findMany({
             include: {
                 staff: {
-                    where: { role: 'Admin' },
                     select: {
                         id: true,
                         name: true,
-                        username: true
+                        username: true,
+                        role: true,
+                        status: true
+                    }
+                },
+                _count: {
+                    select: {
+                        staff: true,
+                        products: true,
+                        orders: true,
+                        categories: true,
+                        customers: true
                     }
                 }
             },
