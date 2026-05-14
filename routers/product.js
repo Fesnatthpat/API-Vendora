@@ -23,9 +23,9 @@ const upload = multer({ storage: storage });
 
 // Routes
 router.post('/product', auth, role(['Cashier', 'Manager', 'Admin', 'Dev']), upload.single('image'), createProduct);
-router.get('/products', listProducts);
+router.get('/products', auth, listProducts);
 router.get('/products/low-stock', auth, getLowStockProducts);
-router.get('/product/:id', readProduct);
+router.get('/product/:id', auth, readProduct);
 router.put('/product/:id', auth, role(['Cashier', 'Manager', 'Admin', 'Dev']), upload.single('image'), updateProduct);
 router.delete('/product/:id', auth, role(['Cashier', 'Manager', 'Admin', 'Dev']), removeProduct);
 
