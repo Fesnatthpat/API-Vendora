@@ -78,7 +78,8 @@ exports.login = async(req, res) => {
             {
                 id: staff.id,
                 username: staff.username,
-                role: staff.role
+                role: staff.role,
+                storeId: staff.storeId
             },
             process.env.JWT_SECRET,
             {
@@ -93,7 +94,8 @@ exports.login = async(req, res) => {
                 id: staff.id,
                 name: staff.name,
                 username: staff.username,
-                role: staff.role
+                role: staff.role,
+                storeId: staff.storeId
             }
         });
 

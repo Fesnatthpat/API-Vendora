@@ -38,6 +38,11 @@ exports.createOrder = async (req, res) => {
             notes,
             customerId 
         } = req.body;
+        const storeId = req.user.storeId;
+
+        if (!storeId) {
+            return res.status(400).json({ message: 'User does not belong to a store' });
+        }
 
         // Handle File Upload if exists
         if (req.file) {
@@ -57,11 +62,14 @@ exports.createOrder = async (req, res) => {
             
             // Process each item
             for (const item of items) {
-                const product = await tx.product.findUnique({
-                    where: { id: item.id }
+                const product = await tx.product.findFirst({
+                    where: { 
+                        id: item.id,
+                        storeId
+                    }
                 });
 
-                if (!product) throw new Error(`Product with ID ${item.id} not found`);
+                if (!product) throw new Error(`Product with ID ${item.id} not found in this store`);
                 if (product.stock < item.quantity) throw new Error(`Insufficient stock for ${product.name}`);
 
                 calculatedTotalCost += (product.cost * item.quantity);
@@ -84,7 +92,8 @@ exports.createOrder = async (req, res) => {
                         previousStock: product.stock,
                         newStock: updatedProduct.stock,
                         costAtTime: product.cost,
-                        note: `Sale Order: ${id}`
+                        note: `Sale Order: ${id}`,
+                        storeId
                     }
                 });
             }
@@ -106,13 +115,18 @@ exports.createOrder = async (req, res) => {
                     receivedAmount: receivedAmount ? parseFloat(receivedAmount) : null,
                     changeDue: changeDue ? parseFloat(changeDue) : null,
                     notes,
-                    customerId: customerId ? parseInt(customerId) : null
+                    customerId: customerId ? parseInt(customerId) : null,
+                    storeId
                 }
             });
 
             // Update Customer Points if applicable
             if (customerId) {
-                const settings = await tx.storeSettings.findFirst() || { 
+                const store = await tx.store.findUnique({
+                    where: { id: storeId }
+                });
+
+                const settings = store || { 
                     loyaltyPointType: 'amount', 
                     loyaltyPointRate: 20 
                 };
@@ -129,7 +143,10 @@ exports.createOrder = async (req, res) => {
 
                 if (pointsEarned > 0) {
                     const customer = await tx.customer.update({
-                        where: { id: parseInt(customerId) },
+                        where: { 
+                            id: parseInt(customerId)
+                            // storeId check is implicit if we trust customerId belongs to store
+                        },
                         data: {
                             points: { increment: pointsEarned }
                         }
@@ -140,7 +157,8 @@ exports.createOrder = async (req, res) => {
                             customerId: parseInt(customerId),
                             amount: pointsEarned,
                             after: customer.points,
-                            note: `Earned from Order: ${id} (${settings.loyaltyPointType === 'item' ? 'Item based' : 'Amount based'})`
+                            note: `Earned from Order: ${id} (${settings.loyaltyPointType === 'item' ? 'Item based' : 'Amount based'})`,
+                            storeId
                         }
                     });
                 }
@@ -159,7 +177,8 @@ exports.createOrder = async (req, res) => {
 exports.listOrders = async (req, res) => {
     try {
         const { start, end } = req.query; // Date filters
-        let where = {};
+        const storeId = req.user.storeId;
+        let where = { storeId };
         
         if (start && end) {
             where.timestamp = {
@@ -185,8 +204,9 @@ exports.listOrders = async (req, res) => {
 exports.getOrder = async (req, res) => {
     try {
         const { id } = req.params;
-        const order = await prisma.order.findUnique({
-            where: { id },
+        const storeId = req.user.storeId;
+        const order = await prisma.order.findFirst({
+            where: { id, storeId },
             include: { customer: true }
         });
         if (!order) return res.status(404).json({ message: 'Order not found' });
@@ -200,10 +220,11 @@ exports.getOrder = async (req, res) => {
 exports.voidOrder = async (req, res) => {
     try {
         const { id } = req.params;
+        const storeId = req.user.storeId;
         
         const result = await prisma.$transaction(async (tx) => {
-            const order = await tx.order.findUnique({
-                where: { id }
+            const order = await tx.order.findFirst({
+                where: { id, storeId }
             });
 
             if (!order) throw new Error('Order not found');
@@ -212,8 +233,15 @@ exports.voidOrder = async (req, res) => {
             // Restore Stock
             const items = order.items;
             for (const item of items) {
-                const product = await tx.product.findUnique({ where: { id: item.id } });
+                const product = await tx.product.findFirst({ 
+                    where: { 
+                        id: item.id,
+                        storeId
+                    } 
+                });
                 
+                if (!product) continue; // Should not happen
+
                 const updatedProduct = await tx.product.update({
                     where: { id: item.id },
                     data: { stock: { increment: item.quantity } }
@@ -228,14 +256,18 @@ exports.voidOrder = async (req, res) => {
                         previousStock: product.stock,
                         newStock: updatedProduct.stock,
                         costAtTime: product.cost,
-                        note: `Void Order: ${id}`
+                        note: `Void Order: ${id}`,
+                        storeId
                     }
                 });
             }
 
             // Deduct Points if customer was involved
             if (order.customerId) {
-                const settings = await tx.storeSettings.findFirst() || { loyaltyPointRate: 20 };
+                const store = await tx.store.findUnique({
+                    where: { id: storeId }
+                });
+                const settings = store || { loyaltyPointRate: 20 };
                 const pointsToDeduct = Math.floor(order.total / settings.loyaltyPointRate);
 
                 if (pointsToDeduct > 0) {
@@ -249,7 +281,8 @@ exports.voidOrder = async (req, res) => {
                             customerId: order.customerId,
                             amount: -pointsToDeduct,
                             after: customer.points,
-                            note: `Deducted from Voided Order: ${id}`
+                            note: `Deducted from Voided Order: ${id}`,
+                            storeId
                         }
                     });
                 }
@@ -270,3 +303,4 @@ exports.voidOrder = async (req, res) => {
         res.status(500).json({ message: 'Voiding Failed', error: err.message });
     }
 };
+

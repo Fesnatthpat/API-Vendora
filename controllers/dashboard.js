@@ -4,10 +4,16 @@ exports.getSummary = async (req, res) => {
     try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const storeId = req.user.storeId;
+
+        if (!storeId) {
+            return res.status(400).json({ message: 'User does not belong to a store' });
+        }
 
         // 1. Today's Sales & Profit
         const todayStats = await prisma.order.aggregate({
             where: {
+                storeId,
                 timestamp: { gte: today },
                 status: 'completed'
             },
@@ -22,7 +28,10 @@ exports.getSummary = async (req, res) => {
 
         // 2. Total Sales & Profit (All time)
         const allTimeStats = await prisma.order.aggregate({
-            where: { status: 'completed' },
+            where: { 
+                storeId,
+                status: 'completed' 
+            },
             _sum: {
                 total: true,
                 profit: true
@@ -30,13 +39,15 @@ exports.getSummary = async (req, res) => {
         });
 
         // 3. Customer Count
-        const customerCount = await prisma.customer.count();
+        const customerCount = await prisma.customer.count({
+            where: { storeId }
+        });
 
         // 4. Low Stock Count
-        const lowStockProducts = await prisma.$queryRaw`
-            SELECT COUNT(*)::int as count FROM "Product" 
-            WHERE "stock" <= "minStockThreshold"
-        `;
+        const lowStockProducts = await prisma.$queryRawUnsafe(
+            `SELECT COUNT(*)::int as count FROM "Product" WHERE "storeId" = $1 AND "stock" <= "minStockThreshold"`,
+            storeId
+        );
 
         res.json({
             todaySales: todayStats._sum.total || 0,
@@ -56,13 +67,13 @@ exports.getSummary = async (req, res) => {
 exports.getTopProducts = async (req, res) => {
     try {
         const { limit = 5 } = req.query;
-        
-        // This is a bit complex with Prisma because items are stored as JSON
-        // For a real production app, an OrderItem table is better.
-        // But for this JSON schema, we'll fetch recent orders and aggregate in JS or use raw SQL
+        const storeId = req.user.storeId;
         
         const orders = await prisma.order.findMany({
-            where: { status: 'completed' },
+            where: { 
+                storeId,
+                status: 'completed' 
+            },
             select: { items: true },
             take: 100 // Look at last 100 orders for top products
         });
@@ -92,6 +103,7 @@ exports.getTopProducts = async (req, res) => {
 
 exports.getSalesChart = async (req, res) => {
     try {
+        const storeId = req.user.storeId;
         const last7Days = [];
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
@@ -106,6 +118,7 @@ exports.getSalesChart = async (req, res) => {
 
             const stats = await prisma.order.aggregate({
                 where: {
+                    storeId,
                     timestamp: {
                         gte: date,
                         lt: nextDate

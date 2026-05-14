@@ -6,6 +6,11 @@ const bcrypt = require('bcryptjs');
 exports.createUser = async(req, res) => {
     try {
         const { name, username, password, role, status } = req.body;
+        const storeId = req.user.storeId;
+
+        if (!storeId) {
+            return res.status(400).json({ message: 'User does not belong to a store' });
+        }
 
         const existingUser = await prisma.staff.findUnique({
             where: { username }
@@ -23,7 +28,8 @@ exports.createUser = async(req, res) => {
                 username,
                 password: hashedPassword,
                 role: role || 'Cashier',
-                status: status || 'Active'
+                status: status || 'Active',
+                storeId: storeId
             }
         });
 
@@ -46,10 +52,10 @@ exports.createUser = async(req, res) => {
 
 // GET ALL USERS
 exports.listUsers = async(req, res) => {
-
     try {
-
+        const storeId = req.user.storeId;
         const users = await prisma.staff.findMany({
+            where: { storeId },
             select: {
                 id: true,
                 name: true,
@@ -81,10 +87,12 @@ exports.getUser = async(req, res) => {
     try {
 
         const { id } = req.params;
+        const storeId = req.user.storeId;
 
-        const user = await prisma.staff.findUnique({
+        const user = await prisma.staff.findFirst({
             where: {
-                id: Number(id)
+                id: Number(id),
+                storeId
             },
             select: {
                 id: true,
@@ -123,6 +131,7 @@ exports.updateUser = async(req, res) => {
     try {
 
         const { id } = req.params;
+        const storeId = req.user.storeId;
 
         const {
             name,
@@ -132,9 +141,10 @@ exports.updateUser = async(req, res) => {
             status
         } = req.body;
 
-        const existingUser = await prisma.staff.findUnique({
+        const existingUser = await prisma.staff.findFirst({
             where: {
-                id: Number(id)
+                id: Number(id),
+                storeId
             }
         });
 
@@ -193,10 +203,12 @@ exports.deleteUser = async(req, res) => {
     try {
 
         const { id } = req.params;
+        const storeId = req.user.storeId;
 
-        const existingUser = await prisma.staff.findUnique({
+        const existingUser = await prisma.staff.findFirst({
             where: {
-                id: Number(id)
+                id: Number(id),
+                storeId
             }
         });
 
@@ -233,6 +245,7 @@ exports.changePassword = async (req, res) => {
     try {
         const { id } = req.params;
         const { password } = req.body;
+        const storeId = req.user.storeId;
 
         if (!password || password.length < 6) {
             return res.status(400).json({
@@ -240,9 +253,10 @@ exports.changePassword = async (req, res) => {
             });
         }
 
-        const existingUser = await prisma.staff.findUnique({
+        const existingUser = await prisma.staff.findFirst({
             where: {
-                id: Number(id)
+                id: Number(id),
+                storeId
             }
         });
 

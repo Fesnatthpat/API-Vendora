@@ -7,10 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Store {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String?
+  phone     String?
+  
+  // Settings fields
+  currency                String   @default("THB")
+  taxRate                 Float    @default(7)
+  includeTax              Boolean  @default(true)
+  receiptNote             String?
+  loyaltyPointType        String   @default("amount")
+  loyaltyPointRate        Float    @default(20)
+  loyaltyPointThreshold   Int      @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  staff          Staff[]
+  categories     Category[]
+  customers      Customer[]
+  products       Product[]
+  orders         Order[]
+  pointLogs      PointLog[]
+  stockMovements StockMovement[]
+}
+
 model Category {
   id        Int       @id @default(autoincrement())
   name      String
   createdAt DateTime  @default(now())
+
+  storeId   Int
+  store     Store     @relation(fields: [storeId], references: [id])
 
   products  Product[]
 }
@@ -23,6 +54,9 @@ model Customer {
   level          String     @default("Silver")
   joinDate       DateTime   @default(now())
   rewardsEarned  Int        @default(0)
+
+  storeId        Int
+  store          Store      @relation(fields: [storeId], references: [id])
 
   orders         Order[]
   pointLogs      PointLog[]
@@ -45,6 +79,9 @@ model Order {
   voidedAt       DateTime?
   timestamp      DateTime   @default(now())
 
+  storeId        Int
+  store          Store      @relation(fields: [storeId], references: [id])
+
   customerId     Int?
   customer       Customer?  @relation(fields: [customerId], references: [id])
 }
@@ -55,6 +92,9 @@ model PointLog {
   after      Int
   note       String
   timestamp  DateTime  @default(now())
+
+  storeId    Int
+  store      Store     @relation(fields: [storeId], references: [id])
 
   customerId Int
   customer   Customer  @relation(fields: [customerId], references: [id])
@@ -74,6 +114,9 @@ model Product {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
+  storeId            Int
+  store              Store     @relation(fields: [storeId], references: [id])
+
   categoryId         Int?
   categoryRelation   Category? @relation(fields: [categoryId], references: [id])
 
@@ -88,12 +131,16 @@ model Staff {
   role      Role      @default(Cashier)
   status    String    @default("Active")
   joinDate  DateTime  @default(now())
+
+  storeId   Int?
+  store     Store?    @relation(fields: [storeId], references: [id])
 }
 
 enum Role {
   Cashier
   Manager
   Admin
+  Dev
 }
 
 model StockMovement {
@@ -108,20 +155,9 @@ model StockMovement {
   note          String?
   timestamp     DateTime  @default(now())
 
+  storeId       Int
+  store         Store     @relation(fields: [storeId], references: [id])
+
   productId     Int
   product       Product   @relation(fields: [productId], references: [id])
-}
-
-model StoreSettings {
-  id                      Int      @id @default(1)
-  name                    String   @default("Vendora POS")
-  address                 String?
-  phone                   String?
-  currency                String   @default("THB")
-  taxRate                 Float    @default(7)
-  includeTax              Boolean  @default(true)
-  receiptNote             String?
-  loyaltyPointType        String   @default("amount")
-  loyaltyPointRate        Float    @default(20)
-  loyaltyPointThreshold   Int      @default(100)
 }

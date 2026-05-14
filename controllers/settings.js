@@ -2,16 +2,14 @@ const prisma = require('../prisma/prisma');
 
 exports.getSettings = async (req, res) => {
     try {
-        let settings = await prisma.storeSettings.findFirst({
-            where: { id: 1 }
-        });
-        
-        if (!settings) {
-            // Create default settings if not exists
-            settings = await prisma.storeSettings.create({
-                data: { id: 1 }
-            });
+        const storeId = req.user.storeId;
+        if (!storeId) {
+            return res.status(404).json({ message: 'Store not found' });
         }
+
+        const settings = await prisma.store.findUnique({
+            where: { id: storeId }
+        });
         
         res.json(settings);
     } catch (err) {
@@ -22,6 +20,11 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
     try {
+        const storeId = req.user.storeId;
+        if (!storeId) {
+            return res.status(404).json({ message: 'Store not found' });
+        }
+
         console.log('Incoming Settings Update:', req.body);
         
         // Extract data, handling potential nesting if frontend sends it that way
@@ -76,22 +79,10 @@ exports.updateSettings = async (req, res) => {
 
         console.log('Cleaned Data for DB:', data);
 
-        // Check if settings record exists
-        const existing = await prisma.storeSettings.findFirst({ where: { id: 1 } });
-
-        let settings;
-        if (existing) {
-            settings = await prisma.storeSettings.update({
-                where: { id: 1 },
-                data: data
-            });
-            console.log('Settings Updated successfully');
-        } else {
-            settings = await prisma.storeSettings.create({
-                data: { id: 1, ...data }
-            });
-            console.log('Settings Created successfully');
-        }
+        const settings = await prisma.store.update({
+            where: { id: storeId },
+            data: data
+        });
 
         res.json(settings);
     } catch (err) {
@@ -103,3 +94,4 @@ exports.updateSettings = async (req, res) => {
         });
     }
 };
+

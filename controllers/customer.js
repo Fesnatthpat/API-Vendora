@@ -3,8 +3,18 @@ const prisma = require('../prisma/prisma');
 exports.createCustomer = async (req, res) => {
     try {
         const { name, phone } = req.body;
+        const storeId = req.user.storeId;
+
+        if (!storeId) {
+            return res.status(400).json({ message: 'User does not belong to a store' });
+        }
+
         const customer = await prisma.customer.create({
-            data: { name, phone }
+            data: { 
+                name, 
+                phone,
+                storeId
+            }
         });
         res.status(201).json(customer);
     } catch (err) {
@@ -15,7 +25,9 @@ exports.createCustomer = async (req, res) => {
 
 exports.listCustomers = async (req, res) => {
     try {
+        const storeId = req.user.storeId;
         const customers = await prisma.customer.findMany({
+            where: { storeId },
             orderBy: { joinDate: 'desc' }
         });
         res.json(customers);
@@ -28,8 +40,12 @@ exports.listCustomers = async (req, res) => {
 exports.getCustomer = async (req, res) => {
     try {
         const { id } = req.params;
-        const customer = await prisma.customer.findUnique({
-            where: { id: parseInt(id) },
+        const storeId = req.user.storeId;
+        const customer = await prisma.customer.findFirst({
+            where: { 
+                id: parseInt(id),
+                storeId
+            },
             include: {
                 orders: {
                     take: 5,
@@ -53,6 +69,19 @@ exports.updateCustomer = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, phone, points, level } = req.body;
+        const storeId = req.user.storeId;
+
+        const existingCustomer = await prisma.customer.findFirst({
+            where: { 
+                id: parseInt(id),
+                storeId
+            }
+        });
+
+        if (!existingCustomer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+
         const customer = await prisma.customer.update({
             where: { id: parseInt(id) },
             data: { name, phone, points, level }
@@ -67,6 +96,19 @@ exports.updateCustomer = async (req, res) => {
 exports.removeCustomer = async (req, res) => {
     try {
         const { id } = req.params;
+        const storeId = req.user.storeId;
+
+        const existingCustomer = await prisma.customer.findFirst({
+            where: { 
+                id: parseInt(id),
+                storeId
+            }
+        });
+
+        if (!existingCustomer) {
+            return res.status(404).json({ message: 'Customer not found' });
+        }
+
         await prisma.customer.delete({
             where: { id: parseInt(id) }
         });
@@ -80,8 +122,9 @@ exports.removeCustomer = async (req, res) => {
 exports.findCustomerByPhone = async (req, res) => {
     try {
         const { phone } = req.params;
+        const storeId = req.user.storeId;
         const customer = await prisma.customer.findFirst({
-            where: { phone }
+            where: { phone, storeId }
         });
         if (!customer) return res.status(404).json({ message: 'Customer not found' });
         res.json(customer);
@@ -95,6 +138,7 @@ exports.redeemCustomerPoints = async (req, res) => {
     try {
         const { id } = req.params;
         const { points, note } = req.body;
+        const storeId = req.user.storeId;
         const pointsToRedeem = parseInt(points);
 
         if (isNaN(pointsToRedeem) || pointsToRedeem <= 0) {
@@ -102,8 +146,11 @@ exports.redeemCustomerPoints = async (req, res) => {
         }
 
         const result = await prisma.$transaction(async (tx) => {
-            const customer = await tx.customer.findUnique({
-                where: { id: parseInt(id) }
+            const customer = await tx.customer.findFirst({
+                where: { 
+                    id: parseInt(id),
+                    storeId
+                }
             });
 
             if (!customer) throw new Error('Customer not found');
@@ -122,7 +169,8 @@ exports.redeemCustomerPoints = async (req, res) => {
                     customerId: parseInt(id),
                     amount: -pointsToRedeem,
                     after: updatedCustomer.points,
-                    note: note || 'Point Redemption'
+                    note: note || 'Point Redemption',
+                    storeId
                 }
             });
 
@@ -140,6 +188,7 @@ exports.adjustCustomerPoints = async (req, res) => {
     try {
         const { id } = req.params;
         const { amount, note } = req.body;
+        const storeId = req.user.storeId;
         const adjustmentAmount = parseInt(amount);
 
         if (isNaN(adjustmentAmount)) {
@@ -147,8 +196,11 @@ exports.adjustCustomerPoints = async (req, res) => {
         }
 
         const result = await prisma.$transaction(async (tx) => {
-            const customer = await tx.customer.findUnique({
-                where: { id: parseInt(id) }
+            const customer = await tx.customer.findFirst({
+                where: { 
+                    id: parseInt(id),
+                    storeId
+                }
             });
 
             if (!customer) throw new Error('Customer not found');
@@ -170,7 +222,8 @@ exports.adjustCustomerPoints = async (req, res) => {
                     customerId: parseInt(id),
                     amount: adjustmentAmount,
                     after: updatedCustomer.points,
-                    note: note || 'Manual Adjustment'
+                    note: note || 'Manual Adjustment',
+                    storeId
                 }
             });
 
@@ -183,3 +236,4 @@ exports.adjustCustomerPoints = async (req, res) => {
         res.status(500).json({ message: err.message || 'Server Error' });
     }
 };
+

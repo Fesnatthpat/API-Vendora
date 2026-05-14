@@ -48,6 +48,12 @@ const deleteFromSupabase = async (imageUrl) => {
 exports.createProduct = async (req, res) => {
     try {
         const { name, category, price, cost, stock, minStockThreshold, barcode, sku, categoryId } = req.body;
+        const storeId = req.user.storeId;
+
+        if (!storeId) {
+            return res.status(400).json({ message: 'User does not belong to a store' });
+        }
+
         let imageUrl = null;
 
         if (req.file) {
@@ -65,7 +71,8 @@ exports.createProduct = async (req, res) => {
                 barcode,
                 sku,
                 image: imageUrl,
-                categoryId: categoryId ? parseInt(categoryId) : null
+                categoryId: categoryId ? parseInt(categoryId) : null,
+                storeId: storeId
             }
         });
 
@@ -78,7 +85,9 @@ exports.createProduct = async (req, res) => {
 
 exports.listProducts = async (req, res) => {
     try {
+        const storeId = req.user.storeId;
         const products = await prisma.product.findMany({
+            where: { storeId },
             include: {
                 categoryRelation: true
             },
@@ -96,8 +105,12 @@ exports.listProducts = async (req, res) => {
 exports.readProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const product = await prisma.product.findUnique({
-            where: { id: parseInt(id) },
+        const storeId = req.user.storeId;
+        const product = await prisma.product.findFirst({
+            where: { 
+                id: parseInt(id),
+                storeId
+            },
             include: {
                 categoryRelation: true
             }
@@ -118,9 +131,13 @@ exports.updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, category, price, cost, stock, minStockThreshold, barcode, sku, categoryId } = req.body;
+        const storeId = req.user.storeId;
         
-        const existingProduct = await prisma.product.findUnique({
-            where: { id: parseInt(id) }
+        const existingProduct = await prisma.product.findFirst({
+            where: { 
+                id: parseInt(id),
+                storeId
+            }
         });
 
         if (!existingProduct) {
@@ -164,9 +181,13 @@ exports.updateProduct = async (req, res) => {
 exports.removeProduct = async (req, res) => {
     try {
         const { id } = req.params;
+        const storeId = req.user.storeId;
         
-        const product = await prisma.product.findUnique({
-            where: { id: parseInt(id) }
+        const product = await prisma.product.findFirst({
+            where: { 
+                id: parseInt(id),
+                storeId
+            }
         });
 
         if (!product) {
@@ -191,15 +212,37 @@ exports.removeProduct = async (req, res) => {
 
 exports.getLowStockProducts = async (req, res) => {
     try {
+        const storeId = req.user.storeId;
+        const lowStockProducts = await prisma.product.findMany({
+            where: {
+                storeId,
+                stock: {
+                    lte: prisma.product.fields.minStockThreshold
+                }
+            }
+        });
+
+        // Note: Prisma doesn't support comparing two columns directly in findMany easily in older versions, 
+        // but let's try a different approach if the above doesn't work or just use a raw query with storeId.
+        
+        /* 
         const lowStockProducts = await prisma.$queryRaw`
             SELECT * FROM "Product" 
-            WHERE "stock" <= "minStockThreshold"
+            WHERE "storeId" = ${storeId} AND "stock" <= "minStockThreshold"
         `;
+        */
 
-        res.json(lowStockProducts);
+        // Let's use raw query to be safe with the logic provided previously
+        const results = await prisma.$queryRawUnsafe(
+            `SELECT * FROM "Product" WHERE "storeId" = $1 AND "stock" <= "minStockThreshold"`,
+            storeId
+        );
+
+        res.json(results);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
 
