@@ -11,12 +11,14 @@ const {
     removeCustomer,
     findCustomerByPhone,
     redeemCustomerPoints,
-    adjustCustomerPoints
+    adjustCustomerPoints,
+    getCustomerPointHistory
 } = require('../controllers/customer');
 
 router.post('/customer', auth, createCustomer);
 router.get('/customers', auth, listCustomers);
 router.get('/customer/:id', auth, getCustomer);
+router.get('/customer/:id/point-history', auth, getCustomerPointHistory);
 router.get('/customer/phone/:phone', auth, findCustomerByPhone);
 router.put('/customer/:id', auth, updateCustomer);
 router.delete('/customer/:id', auth, role(['Manager', 'Admin', 'Dev']), removeCustomer);

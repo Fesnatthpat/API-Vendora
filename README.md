@@ -97,6 +97,7 @@ Backend API สำหรับระบบจัดการการขาย (
 | DELETE | `/customer/:id` | ลบข้อมูลลูกค้า | Yes (Manager/Admin/Dev) |
 | POST | `/customer/:id/redeem` | แลกแต้มรางวัล | Yes |
 | POST | `/customer/:id/adjust-points` | ปรับปรุงแต้มด้วยตนเอง | Yes (Manager/Admin/Dev) |
+| GET | `/customer/:id/point-history` | ดูประวัติแต้มสะสมทั้งหมดของลูกค้า | Yes |
 
 ### 9. ระบบขายสินค้า (Order / Checkout)
 | Method | Endpoint | Description | Auth |
